@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Orbit Club Launcher · Student Engineering Collective</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    @property --theme { syntax: '<color>'; inherits: true; initial-value: #3b82f6; }
+    :root {
+      --bg: #03050a;
+      --fg: #eef3fc;
+      --dim: #8b96ad;
+      --line: rgba(255, 255, 255, 0.12);
+      --line-strong: rgba(255, 255, 255, 0.28);
+      --theme: #3b82f6;
+      --cool: #3b4e72;
+      --display: 'Bricolage Grotesque', system-ui, sans-serif;
+      --body: 'DM Sans', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; width: 100%; background: var(--bg); }
+    body {
+      min-height: 100dvh; width: 100%; background: var(--bg); color: var(--fg);
+      font-family: var(--body); user-select: none; overflow-x: hidden; overflow-y: auto;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+    input, textarea, select { font: inherit; color: inherit; background: none; }
+
+    #stage {
+      position: relative; width: 100%; min-height: 100dvh; max-width: 1440px; margin: 0 auto;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 0 clamp(16px, 3.5vw, 40px); transition: --theme 0.85s ease; box-sizing: border-box;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Background */
+    .bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .wall {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(110% 85% at 75% -5%, color-mix(in srgb, var(--theme) 45%, transparent), transparent 65%),
+        radial-gradient(85% 65% at 10% 105%, color-mix(in srgb, var(--theme) 22%, #000), transparent 68%),
+        radial-gradient(50% 50% at 50% 50%, color-mix(in srgb, var(--theme) 12%, transparent), transparent 80%),
+        linear-gradient(180deg, #070a16 0%, #03040a 100%);
+      transition: background 0.85s ease;
+    }
+    #constellation { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.7; mix-blend-mode: screen; }
+    .beam { position: absolute; inset: 0; background: radial-gradient(50% 35% at 50% -2%, rgba(255, 230, 180, 0.2), transparent 72%); }
+    .ghost {
+      position: absolute; left: 2vw; bottom: 8%;
+      font: 800 clamp(64px, 16vw, 240px)/0.8 var(--display);
+      letter-spacing: -0.04em; text-transform: uppercase; color: transparent;
+      -webkit-text-stroke: 1.2px rgba(255, 255, 255, 0.05);
+      white-space: nowrap; user-select: none; pointer-events: none;
+    }
+    .grain {
+      position: absolute; inset: 0; opacity: 0.07; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .vig { position: absolute; inset: 0; background: radial-gradient(130% 95% at 50% 45%, transparent 50%, rgba(0, 0, 0, 0.75)); }
+
+    /* Top Console Bar */
+    .top {
+      position: relative; z-index: 30; display: flex; justify-content: space-between; align-items: center;
+      padding: clamp(14px, 2.5vh, 26px) 0 14px 0; gap: 16px; flex-shrink: 0; width: 100%;
+    }
+    .top-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .brand-badge {
+      display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--line); padding: 6px 14px 6px 10px; border-radius: 999px; backdrop-filter: blur(12px);
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e;
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+    .brand-name { font: 700 14px/1 var(--display); letter-spacing: -0.01em; }
+    .brand-tag { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .back-btn {
+      display: none; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;
+      color: var(--fg); padding: 7px 16px 7px 12px; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08); border: 1px solid var(--line-strong); backdrop-filter: blur(14px);
+      transition: all 0.25s ease;
+    }
+    #stage:not([data-view="home"]) .back-btn { display: inline-flex; }
+    #stage:not([data-view="home"]) .brand-badge { display: none; }
+    .back-btn:hover { background: rgba(255, 255, 255, 0.16); transform: translateX(-2px); }
+    .esc-hint { font-family: var(--mono); font-size: 10px; background: rgba(255, 255, 255, 0.14); padding: 2px 5px; border-radius: 4px; color: #c9d4ea; }
+
+    .clock-box { display: flex; flex-direction: column; }
+    .clock {
+      font: 700 clamp(24px, 3.5vw, 38px)/1 var(--display); letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 4px;
+    }
+    .date { font-size: 11px; color: var(--dim); letter-spacing: 0.02em; margin-top: 2px; }
+
+    .top-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+    .meet-card { text-align: right; display: flex; flex-direction: column; gap: 2px; }
+    .meet-badge {
+      display: inline-flex; align-items: center; gap: 6px; align-self: flex-end;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim);
+    }
+    .pulse-circle { width: 6px; height: 6px; border-radius: 50%; background: var(--theme); box-shadow: 0 0 8px var(--theme); }
+    .meet-details { font-size: 12px; color: #cfd8ed; white-space: nowrap; }
+    .meet-details b { color: #fff; font-weight: 600; }
+    .meet-countdown { font-family: var(--mono); font-size: 10px; color: var(--theme); font-weight: 600; }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .hud-action-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); font-size: 12px;
+      color: var(--fg); backdrop-filter: blur(10px); transition: all 0.2s ease; white-space: nowrap;
+    }
+    .hud-action-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--line-strong); }
+    .kbd-pill { font-family: var(--mono); font-size: 10px; background: rgba(255, 255, 255, 0.1); padding: 1px 5px; border-radius: 4px; }
+
+    /* Views */
+    .views { position: relative; z-index: 20; display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 0; }
+    .view {
+      display: none; flex-direction: column; justify-content: space-between; flex: 1; width: 100%;
+      opacity: 0; transform: translateY(12px); transition: opacity .4s ease, transform .4s ease;
+    }
+    .view.on { display: flex; opacity: 1; transform: none; }
+    .rise { animation: riseAnim .45s cubic-bezier(.16, 1, .3, 1) both; }
+    @keyframes riseAnim { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Home View */
+    #home { justify-content: flex-end; padding-bottom: clamp(24px, 5vh, 60px); }
+    .club-kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+    .club-kicker .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--theme); }
+    .tagline {
+      font: 600 clamp(22px, 3.6vw, 44px)/1.15 var(--display); letter-spacing: -0.02em;
+      max-width: 26ch; min-height: 2.2em; display: flex; align-items: flex-end; color: #fff;
+    }
+    .dock { display: flex; gap: clamp(10px, 2vw, 24px); margin-top: clamp(12px, 2.5vh, 26px); align-items: flex-start; flex-wrap: wrap; width: 100%; }
+    .dock-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; width: clamp(58px, 7vw, 84px); opacity: 0.6; transition: opacity 0.3s, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .dock-icon-wrapper {
+      position: relative; width: 100%; aspect-ratio: 1; border-radius: 24%;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex; align-items: center; justify-content: center; padding: 22%; backdrop-filter: blur(14px);
+      transition: background 0.3s, box-shadow 0.35s, border-color 0.3s;
+    }
+    .dock-icon-wrapper svg { width: 100%; height: 100%; color: #fff; }
+    .dock-number { position: absolute; top: -6px; right: -4px; font-family: var(--mono); font-size: 9px; background: rgba(0, 0, 0, 0.75); border: 1px solid var(--line); padding: 1px 4px; border-radius: 4px; color: var(--dim); }
+    .dock-btn .dock-nm { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg); opacity: 0; transform: translateY(-4px); transition: opacity 0.3s, transform 0.3s; white-space: nowrap; }
+    .dock-btn.on { opacity: 1; transform: translateY(-5px) scale(1.14); }
+    .dock-btn.on .dock-icon-wrapper {
+      background: color-mix(in srgb, var(--theme) 40%, rgba(255, 255, 255, 0.1));
+      border-color: rgba(255, 255, 255, 0.45);
+      box-shadow: 0 10px 36px color-mix(in srgb, var(--theme) 55%, transparent), inset 0 0 16px rgba(255, 255, 255, 0.15);
+    }
+    .dock-btn.on .dock-nm { opacity: 1; transform: none; color: #fff; }
+
+    .hint-bar { display: flex; align-items: center; gap: 16px; margin-top: 20px; font-size: 11px; color: var(--dim); }
+    .hint-item { display: flex; align-items: center; gap: 6px; }
+    .hint-divider { width: 1px; height: 12px; background: var(--line); }
+    .kbd { font-family: var(--mono); font-size: 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.16); padding: 2px 5px; border-radius: 4px; color: #fff; }
+
+    /* Members View */
+    #members { padding-bottom: clamp(16px, 3vh, 32px); gap: 16px; }
+    .who { width: 100%; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .who .kick { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); font-weight: 600; }
+    .who .nm { font: 800 clamp(28px, 4.5vw, 54px)/1.05 var(--display); letter-spacing: -0.03em; color: #fff; }
+    .who .rl { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px; background: color-mix(in srgb, var(--theme) 35%, rgba(255, 255, 255, 0.08)); border: 1px solid rgba(255, 255, 255, 0.28); margin-top: 6px; display: inline-block; }
+    .collage { position: relative; width: min(1040px, 100%); height: clamp(260px, 40vh, 440px); margin: 0 auto; }
+    .m { position: absolute; bottom: 0; left: var(--x); height: var(--h); aspect-ratio: 3 / 4; transform: translateX(-50%); z-index: var(--z); --c: var(--cool); filter: brightness(0.55) saturate(0.85); transition: filter 0.45s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .m svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .m .fig { fill: var(--c); transition: fill 0.45s; }
+    .m .acc { fill: rgba(0, 0, 0, 0.45); }
+    .m .line { fill: none; stroke: rgba(0, 0, 0, 0.6); stroke-width: 2.6; }
+    .m.on { --c: var(--mc); z-index: 30 !important; filter: brightness(1.08) saturate(1.15) drop-shadow(0 0 50px color-mix(in srgb, var(--mc) 65%, transparent)); transform: translateX(-50%) translateY(-2%) scale(1.08); }
+
+    /* Cards Deck */
+    #panel { padding-bottom: clamp(16px, 3vh, 32px); gap: 16px; }
+    .panel-head { width: 100%; display: flex; flex-direction: column; }
+    .panel-head .kick { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); font-weight: 600; }
+    .panel-head .nm { font: 800 clamp(28px, 4.5vw, 54px)/1.05 var(--display); letter-spacing: -0.03em; color: #fff; }
+    .panel-head .sub-desc { margin-top: 6px; font-size: 14px; color: #c4d0ea; max-width: 52ch; }
+    .cards { display: flex; gap: 18px; overflow-x: auto; padding: 16px 4px 12px; scroll-snap-type: x proximity; width: 100%; box-sizing: border-box; }
+    .card {
+      flex: 0 0 clamp(230px, 23vw, 290px); min-height: clamp(250px, 36vh, 340px); scroll-snap-align: center;
+      text-align: left; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+      position: relative; overflow: hidden; border: 1px solid var(--line);
+      background: linear-gradient(160deg, color-mix(in srgb, var(--theme) 38%, #0d1326), #070a14 80%);
+      opacity: 0.65; transform: scale(0.97); backdrop-filter: blur(14px);
+      transition: opacity 0.35s, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s, box-shadow 0.35s;
+    }
+    .card.on { opacity: 1; transform: scale(1.03); border-color: rgba(255, 255, 255, 0.5); box-shadow: 0 16px 50px color-mix(in srgb, var(--theme) 45%, transparent); }
+    .card-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; background: rgba(255, 255, 255, 0.12); padding: 3px 8px; border-radius: 6px; }
+    .card-title { font: 700 19px/1.2 var(--display); color: #fff; margin-top: 10px; }
+    .card-subtitle { font-size: 12px; color: #9cb1d6; margin-top: 3px; }
+    .card-desc { font-size: 12px; line-height: 1.45; color: #cad8ee; margin-top: 8px; }
+    .card-cta { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #fff; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
+
+    /* Modals & HUD */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 100; background: rgba(2, 4, 10, 0.75); backdrop-filter: blur(14px); display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal-backdrop.open { display: flex; }
+    .modal-box { width: min(560px, 94vw); background: #090e1f; border: 1px solid var(--line-strong); border-radius: 24px; padding: clamp(20px, 3.5vh, 32px); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9); position: relative; }
+    .modal-close { position: absolute; top: 18px; right: 18px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .modal-title { font: 800 clamp(22px, 3.2vw, 32px)/1.15 var(--display); color: #fff; margin: 8px 0 4px; }
+    .modal-btn { width: 100%; padding: 12px; border-radius: 12px; background: var(--theme); color: #fff; font-weight: 700; font-size: 13px; margin-top: 18px; text-align: center; }
+
+    /* Command Palette */
+    #cmdModal { position: fixed; inset: 0; z-index: 110; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px); display: none; align-items: flex-start; justify-content: center; padding: 12vh 16px 16px; }
+    #cmdModal.open { display: flex; }
+    .cmd-box { width: min(600px, 94vw); background: #0d1222; border: 1px solid var(--line-strong); border-radius: 18px; overflow: hidden; box-shadow: 0 30px 100px rgba(0,0,0,0.95); }
+    .cmd-search { width: 100%; padding: 14px 18px; font-size: 15px; color: #fff; border: 0; border-bottom: 1px solid var(--line); }
+    .cmd-results { max-height: 320px; overflow-y: auto; padding: 6px; }
+    .cmd-row { padding: 9px 12px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .cmd-row:hover { background: rgba(255, 255, 255, 0.1); }
+
+    /* Mobile Responsive Overrides */
+    @media (max-width: 900px) {
+      .meet-card { display: none; }
+    }
+    @media (max-width: 768px) {
+      #stage { padding: 0 14px; min-height: 100dvh; }
+      .top { padding: 12px 0 10px 0; gap: 8px; }
+      .brand-badge { padding: 4px 10px 4px 8px; }
+      .brand-name { font-size: 13px; }
+      .brand-tag, .date { display: none; }
+      .clock { font-size: 20px; }
+      .header-actions { gap: 6px; }
+      .hud-action-btn { padding: 6px 9px; font-size: 11px; }
+      .kbd-pill { display: none; }
+      .quick-apply-btn { padding: 6px 12px; font-size: 11px; }
+      .tagline { font-size: 24px; max-width: 100%; min-height: 1.8em; }
+      .dock {
+        flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x mandatory;
+        gap: 10px; padding: 6px 2px 14px 2px; scrollbar-width: none;
+      }
+      .dock::-webkit-scrollbar { display: none; }
+      .dock-btn { flex: 0 0 clamp(66px, 18vw, 76px); scroll-snap-align: start; opacity: 0.85; }
+      .dock-btn .dock-nm { opacity: 1; transform: none; font-size: 10px; }
+      .dock-btn.on { transform: translateY(-2px) scale(1.05); }
+      .hint-bar { display: none; }
+      .collage { height: clamp(220px, 34vh, 320px); }
+      .who .nm { font-size: 26px; }
+      .cards { gap: 12px; padding: 10px 2px; }
+      .card { flex: 0 0 78vw; min-height: 240px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="stage" data-view="home">
+  <!-- Dynamic Ambient BG -->
+  <div class="bg" aria-hidden="true">
+    <div class="wall"></div>
+    <canvas id="constellation"></canvas>
+    <div class="beam"></div>
+    <div class="ghost" id="ghost"></div>
+    <div class="grain"></div>
+    <div class="vig"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="top">
+    <div class="top-left">
+      <button class="back-btn" id="backBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+        <span>Home</span>
+        <kbd class="esc-hint">Esc</kbd>
+      </button>
+      <div class="brand-badge">
+        <span class="live-dot"></span>
+        <span class="brand-name">Orbit Club</span>
+        <span class="brand-tag">Launcher</span>
+      </div>
+      <div class="clock-box">
+        <div class="clock" id="clock">--:--</div>
+        <div class="date" id="date"></div>
+      </div>
+    </div>
+
+    <div class="top-right">
+      <div class="meet-card">
+        <div class="meet-badge"><span class="pulse-circle"></span> Next Meetup</div>
+        <div class="meet-details" id="meetDetails"></div>
+        <div class="meet-countdown" id="meetCountdown"></div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="hud-action-btn" id="cmdTrigger">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search</span>
+          <span class="kbd-pill">⌘K</span>
+        </button>
+        <button type="button" class="hud-action-btn" id="audioToggle">
+          <span id="audioStatus">🔊 Sound</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Views -->
+  <div class="views">
+    <!-- Home View -->
+    <section class="view on" id="home">
+      <div class="club-kicker"><span class="dot"></span> Student Engineering & Builder Collective</div>
+      <div class="tagline rise" id="tagline"></div>
+      <nav class="dock" id="dock"></nav>
+      <div class="hint-bar">
+        <div class="hint-item"><kbd class="kbd">←</kbd><kbd class="kbd">→</kbd><span>Browse sections</span></div>
+        <div class="hint-divider"></div>
+        <div class="hint-item"><kbd class="kbd">Enter</kbd><span>Open</span></div>
+        <div class="hint-divider"></div>
+        <div class="hint-item"><kbd class="kbd">1-6</kbd><span>Direct jump</span></div>
+      </div>
+    </section>
+
+    <!-- Members View -->
+    <section class="view" id="members">
+      <div class="who">
+        <div>
+          <div class="kick">Core Team & Leads · 2026</div>
+          <div class="nm rise" id="mName"></div>
+          <div class="rl" id="mRole"></div>
+        </div>
+      </div>
+      <div class="collage" id="collage"></div>
+    </section>
+
+    <!-- Cards Panel View -->
+    <section class="view" id="panel">
+      <div class="panel-head">
+        <div class="kick" id="pKick">Orbit Collective</div>
+        <div class="nm rise" id="pName"></div>
+        <div class="sub-desc" id="pSub"></div>
+      </div>
+      <div class="cards" id="cards"></div>
+    </section>
+  </div>
+</div>
+
+<!-- Simple Detail Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div id="modalKicker" style="font-size:11px;font-weight:bold;text-transform:uppercase;color:var(--theme)"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalSub" style="font-size:13px;color:#94a3b8;margin-bottom:14px;"></div>
+    <div id="modalDesc" style="font-size:14px;color:#cad8ee;line-height:1.5;"></div>
+    <button class="modal-btn" id="modalActionBtn">Take Action</button>
+  </div>
+</div>
+
+<!-- Command Palette Modal -->
+<div id="cmdModal">
+  <div class="cmd-box">
+    <input type="text" class="cmd-search" id="cmdInput" placeholder="Search sections, projects, events, or team...">
+    <div class="cmd-results" id="cmdList"></div>
+  </div>
+</div>
+
+<script>
+/* Synthesized Web Audio API */
+let audioCtx = null;
+let soundEnabled = true;
+function playSound(freq = 600, duration = 0.04) {
+  if (!soundEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+
+const CLUB = { name: 'Orbit Club', meetDow: 6, meetHour: 17, meetPlace: 'Innovation Hub, Lab 2' };
+
+const SECTIONS = [
+  { id: 'events', label: 'Events', color: '#3b82f6', icon: '<rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    sub: 'Workshops, hackathons, talks and weekly build nights.',
+    taglines: ['Doors open at five. Bring a friend, bring a charger.', 'Saturday is for building real things.', 'Live demos only. No slides allowed.'],
+    items: [
+      { tag: 'Workshop', t: 'Git & GitHub from Zero to Hero', s: 'Sat · 5:00 PM · Lab 2', desc: 'Interactive hands-on session mastering branching, PR reviews, and CI/CD.' },
+      { tag: 'Build Night', t: 'All-Night Hack Sprint: AI Agents', s: 'Fri · 6:30 PM · Innovation Hall', desc: 'Overnight collaborative sprint building autonomous browser agents.' },
+      { tag: 'Keynote Talk', t: 'Silicon Valley to Campus: Building in Public', s: 'Nov 24 · 4:00 PM · Auditorium', desc: 'Talk by Orbit alumni on scaling apps to 1M+ active users.' },
+      { tag: 'Contest', t: 'Orbit CTF: Binary & Web Exploits', s: 'Dec 02 · 10:00 AM · Lab 3', desc: 'Beginner-friendly Jeopardy-style cyber-security capture the flag.' }
+    ]
+  },
+  { id: 'projects', label: 'Projects', color: '#a855f7', icon: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/>',
+    sub: 'Open source apps, autonomous rovers, and tools shipped by members.',
+    taglines: ['Ship early. Ship often. Merge conflicts build character.', 'Works on my machine — and soon in production.'],
+    items: [
+      { tag: 'Web & AI', t: 'Campus Pulse Engine', s: 'React · FastAPI · Milvus', desc: 'Smart campus search engine indexing course materials and labs.' },
+      { tag: 'Mobile App', t: 'Orbit Companion', s: 'Flutter · Supabase', desc: 'Live occupancy, food truck trackers, and peer study matching.' },
+      { tag: 'Hardware', t: 'Autonomous Delivery Rover', s: 'ROS2 · LiDAR · Arduino', desc: 'Indoor SLAM delivery bot for intra-building transport.' }
+    ]
+  },
+  { id: 'members', label: 'Team', color: '#22c55e', icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>', view: 'members',
+    sub: 'The creators, organizers, and architects steering Orbit forward.',
+    taglines: ['Meet the builders behind the commits.', 'Everyone here started as a beginner.', 'Drop by Lab 2 anytime.']
+  },
+  { id: 'gallery', label: 'Gallery', color: '#ef4444', icon: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+    sub: 'Snapshots from late night hacks, demos, and campus wins.',
+    taglines: ['Moments, not screenshots.', 'Caught mid-compile at 3 AM with 9 pizzas.'],
+    items: [
+      { tag: 'Hack Night', t: '36 Hours, 14 Teams, 9 Pizzas', s: 'Fall Hackathon · 48 Photos', desc: 'Whiteboards, energetic pitching, and winning project demos.' },
+      { tag: 'Workshops', t: 'Freshers Git & Linux Bootcamp', s: 'Lab Session · 32 Photos', desc: '90+ new students committing their first pull requests.' }
+    ]
+  },
+  { id: 'resources', label: 'Resources', color: '#f59e0b', icon: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    sub: 'Curated roadmaps, cheat sheets, interview primers, and workshop slides.',
+    taglines: ['Everything we wish someone handed us in week one.', 'Free and open-source forever.'],
+    items: [
+      { tag: 'Roadmap', t: 'Fullstack Web & Cloud Engineering', s: '15 Interactive Modules', desc: 'From HTML/CSS to Docker, Kubernetes, and System Design.' },
+      { tag: 'Cheatsheet', t: 'Git, Vim & Linux Command Deck', s: 'Single-sheet PDF', desc: 'Essential keyboard shortcuts used daily by leads.' }
+    ]
+  },
+  { id: 'join', label: 'Join', color: '#ec4899', icon: '<path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/>',
+    sub: 'Recruitment is now live! Apply to join our wings or just show up to learn.',
+    taglines: ['No previous experience needed.', 'Your seat in Lab 2 is waiting.'],
+    items: [
+      { tag: 'Step 1', t: 'Choose Your Wing', s: 'Dev · AI · Design · Hardware · Ops', desc: 'Select your preferred engineering domain.' },
+      { tag: 'Step 2', t: 'Attend Saturday Meetup', s: 'Lab 2 · 5:00 PM', desc: 'Get onboarded directly by core leads.' }
+    ]
+  }
+];
+
+const MEMBERS = [
+  { name: 'Ishita Rao',   role: 'Head of Design & UX',    color: '#f472b6', style: 'bun',     x: 12, h: 62, z: 1, desc: 'Crafting spatial interfaces, micro-interactions, and visual branding.' },
+  { name: 'Rohan Iyer',   role: 'Tech Lead & Systems',     color: '#38bdf8', style: 'glasses', x: 27, h: 74, z: 2, desc: 'Distributed systems nerd. Lives in Neovim, manages club server rack.' },
+  { name: 'Aarav Mehta',  role: 'President',               color: '#fbbf24', style: 'hair',    x: 43, h: 86, z: 3, desc: 'Building the best builder community on campus.' },
+  { name: 'Meera Nair',   role: 'Vice President & AI Lead',color: '#a78bfa', style: 'long',    x: 58, h: 90, z: 4, desc: 'Exploring LLM reasoning and small model fine-tuning.' },
+  { name: 'Kabir Shah',   role: 'Head of Events & Ops',    color: '#34d399', style: 'cap',     x: 74, h: 78, z: 3, desc: 'Orchestrating hackathons, game nights, and tech talks.' },
+  { name: 'Anaya Das',    role: 'Community & Outreach',    color: '#fb7185', style: 'beanie',  x: 88, h: 65, z: 2, desc: 'Connecting Orbit with tech founders and student communities.' }
+];
+
+const state = { view: 'home', home: 0, mem: 2, card: 0, section: 0, tag: SECTIONS.map(() => 0) };
+const stage = document.getElementById('stage');
+
+function setTheme(c) { stage.style.setProperty('--theme', c); }
+function swapText(el, t) { el.classList.remove('rise'); void el.offsetWidth; el.textContent = t; el.classList.add('rise'); }
+
+// Meetup & Clock
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent = n.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  document.getElementById('date').textContent = n.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const target = new Date(n);
+  target.setHours(CLUB.meetHour, 0, 0, 0);
+  target.setDate(n.getDate() + ((CLUB.meetDow - n.getDay() + 7) % 7));
+  if (target <= n) target.setDate(target.getDate() + 7);
+  const ms = target - n;
+  const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+  const when = target.toLocaleDateString('en-GB', { weekday: 'short' }) + ' · ' + target.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  document.getElementById('meetDetails').innerHTML = '<b>' + when + '</b> · ' + CLUB.meetPlace;
+  document.getElementById('meetCountdown').textContent = d > 0 ? (d + 'd ' + h + 'h left') : (h + 'h ' + m + 'm left');
+}
+updateClock(); setInterval(updateClock, 10000);
+
+// Dock init
+const dock = document.getElementById('dock');
+SECTIONS.forEach((s, idx) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'dock-btn';
+  b.innerHTML = '<div class="dock-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' + s.icon + '</svg><span class="dock-number">0' + (idx+1) + '</span></div><span class="dock-nm">' + s.label + '</span>';
+  b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { playSound(500 + idx*50); focusHome(idx); } });
+  b.addEventListener('click', () => { playSound(800); focusHome(idx); openSection(idx); });
+  dock.appendChild(b);
+});
+
+function focusHome(idx) {
+  state.home = idx;
+  [...dock.children].forEach((b, k) => b.classList.toggle('on', k === idx));
+  const s = SECTIONS[idx];
+  setTheme(s.color);
+  swapText(document.getElementById('ghost'), s.label);
+  swapText(document.getElementById('tagline'), s.taglines[state.tag[idx]++ % s.taglines.length]);
+}
+
+// Collage init
+const ACC = {
+  hair: '<path class="acc" d="M35 58C34 30 86 30 85 58C78 46 44 46 35 58Z"/>',
+  long: '<path class="acc" d="M31 72C24 28 96 28 89 72L90 112L30 112Z" transform="translate(0,-2)"/>',
+  cap: '<path class="acc" d="M33 52C35 27 85 27 87 52Z"/><path class="acc" d="M78 50L108 55L78 59Z"/>',
+  beanie: '<path class="acc" d="M34 52C34 24 86 24 86 52Z"/><circle class="acc" cx="60" cy="23" r="6"/>',
+  bun: '<path class="acc" d="M35 56C36 32 84 32 85 56C76 46 44 46 35 56Z"/><circle class="acc" cx="60" cy="29" r="10"/>',
+  glasses: '<path class="acc" d="M35 54C38 33 82 33 85 54C76 45 44 45 35 54Z"/><circle class="line" cx="50" cy="63" r="8"/><circle class="line" cx="70" cy="63" r="8"/><path class="line" d="M58 63h4"/>'
+};
+function figure(m) {
+  const back = m.style === 'long' ? ACC.long : '';
+  const front = m.style === 'long' ? '<path class="acc" d="M35 58C36 34 84 34 85 58C76 47 44 47 35 58Z"/>' : ACC[m.style] || '';
+  return '<svg viewBox="0 0 120 160" aria-hidden="true">' + back +
+    '<path class="fig" d="M6 160C6 116 34 102 60 102C86 102 114 116 114 160Z"/>' +
+    '<rect class="fig" x="51" y="84" width="18" height="24" rx="6"/>' +
+    '<ellipse class="fig" cx="60" cy="62" rx="24" ry="28"/>' + front + '</svg>';
+}
+const collage = document.getElementById('collage');
+MEMBERS.forEach((m, idx) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'm';
+  b.style.cssText = '--x:' + m.x + '%;--h:' + m.h + '%;--z:' + m.z + ';--mc:' + m.color;
+  b.innerHTML = figure(m);
+  b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { playSound(600 + idx*40); focusMember(idx); } });
+  b.addEventListener('click', () => {
+    playSound(880);
+    focusMember(idx);
+    openModal(m.role, m.name, 'Core Team Lead', m.desc);
+  });
+  collage.appendChild(b);
+});
+function focusMember(idx) {
+  state.mem = idx;
+  const m = MEMBERS[idx];
+  [...collage.children].forEach((b, k) => b.classList.toggle('on', k === idx));
+  setTheme(m.color);
+  swapText(document.getElementById('mName'), m.name);
+  document.getElementById('mRole').textContent = m.role;
+}
+
+// Panel cards
+function openPanel(idx) {
+  const s = SECTIONS[idx];
+  state.section = idx;
+  document.getElementById('pKick').textContent = 'Orbit Collective · ' + s.label;
+  swapText(document.getElementById('pName'), s.label);
+  document.getElementById('pSub').textContent = s.sub;
+  const cardsWrap = document.getElementById('cards');
+  cardsWrap.innerHTML = '';
+  s.items.forEach((it, k) => {
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'card';
+    c.innerHTML = '<div><span class="card-tag">' + it.tag + '</span><div class="card-title">' + it.t + '</div><div class="card-subtitle">' + it.s + '</div><div class="card-desc">' + it.desc + '</div></div><div class="card-cta">Inspect Details →</div>';
+    c.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { playSound(550 + k*30); focusCard(k); } });
+    c.addEventListener('click', () => {
+      playSound(880);
+      openModal(it.tag, it.t, it.s, it.desc);
+    });
+    cardsWrap.appendChild(c);
+  });
+  focusCard(0);
+}
+function focusCard(k) {
+  state.card = k;
+  [...document.getElementById('cards').children].forEach((c, j) => {
+    c.classList.toggle('on', j === k);
+    if (j === k) c.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  });
+}
+
+function show(v) {
+  state.view = v; stage.dataset.view = v;
+  ['home', 'members', 'panel'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.toggle('on', id === v);
+  });
+}
+function openSection(idx) {
+  const s = SECTIONS[idx];
+  setTheme(s.color);
+  swapText(document.getElementById('ghost'), s.label);
+  if (s.view === 'members') { show('members'); focusMember(state.mem); }
+  else { openPanel(idx); show('panel'); }
+}
+function goHome() {
+  playSound(500);
+  show('home');
+  focusHome(state.home);
+}
+document.getElementById('backBtn').addEventListener('click', goHome);
+
+// Keyboard
+function move(dir) {
+  if (state.view === 'home') { focusHome((state.home + dir + SECTIONS.length) % SECTIONS.length); playSound(550); }
+  else if (state.view === 'members') { focusMember((state.mem + dir + MEMBERS.length) % MEMBERS.length); playSound(650); }
+  else {
+    const n = SECTIONS[state.section].items.length;
+    focusCard((state.card + dir + n) % n); playSound(580);
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') { e.preventDefault(); move(1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); move(-1); }
+  else if (e.key === 'Enter' && state.view === 'home') { e.preventDefault(); openSection(state.home); }
+  else if ((e.key === 'Escape' || e.key === 'Backspace') && state.view !== 'home') { e.preventDefault(); goHome(); }
+  else if (['1','2','3','4','5','6'].includes(e.key) && state.view === 'home') {
+    const k = parseInt(e.key) - 1;
+    focusHome(k); openSection(k);
+  } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault(); toggleCmd();
+  }
+});
+
+// Modal
+function openModal(kicker, title, sub, desc) {
+  document.getElementById('modalKicker').textContent = kicker;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = sub;
+  document.getElementById('modalDesc').textContent = desc;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('modalBackdrop').classList.remove('open');
+});
+document.getElementById('modalBackdrop').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('modalBackdrop').classList.remove('open');
+});
+document.getElementById('modalActionBtn').addEventListener('click', () => {
+  alert('Action registered! See you at Lab 2 this Saturday!');
+  document.getElementById('modalBackdrop').classList.remove('open');
+});
+
+// Audio Toggle
+document.getElementById('audioToggle').addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  document.getElementById('audioStatus').textContent = soundEnabled ? '🔊 Sound' : '🔇 Muted';
+  if (soundEnabled) playSound(800);
+});
+
+// Command Palette
+function toggleCmd() {
+  const modal = document.getElementById('cmdModal');
+  modal.classList.toggle('open');
+  if (modal.classList.contains('open')) {
+    document.getElementById('cmdInput').focus();
+    renderCmd('');
+  }
+}
+document.getElementById('cmdTrigger').addEventListener('click', toggleCmd);
+document.getElementById('cmdModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) toggleCmd();
+});
+function renderCmd(q) {
+  const list = document.getElementById('cmdList');
+  list.innerHTML = '';
+  SECTIONS.forEach((s, idx) => {
+    if (s.label.toLowerCase().includes(q.toLowerCase())) {
+      const row = document.createElement('div');
+      row.className = 'cmd-row';
+      row.innerHTML = '<span>📂 ' + s.label + '</span><span style="font-size:11px;color:#8b96ad">Section</span>';
+      row.addEventListener('click', () => {
+        toggleCmd(); focusHome(idx); openSection(idx);
+      });
+      list.appendChild(row);
+    }
+  });
+  MEMBERS.forEach((m, idx) => {
+    if (m.name.toLowerCase().includes(q.toLowerCase())) {
+      const row = document.createElement('div');
+      row.className = 'cmd-row';
+      row.innerHTML = '<span>👤 ' + m.name + ' (' + m.role + ')</span><span style="font-size:11px;color:#8b96ad">Team</span>';
+      row.addEventListener('click', () => {
+        toggleCmd(); show('members'); focusMember(idx);
+      });
+      list.appendChild(row);
+    }
+  });
+}
+document.getElementById('cmdInput').addEventListener('input', e => renderCmd(e.target.value));
+
+// Particle Constellation Background
+const canvas = document.getElementById('constellation');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+window.addEventListener('resize', () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; });
+const pts = Array.from({ length: 42 }, () => ({
+  x: Math.random() * w, y: Math.random() * h,
+  vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4
+}));
+function drawConstellation() {
+  ctx.clearRect(0, 0, w, h);
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0 || p.x > w) p.vx *= -1;
+    if (p.y < 0 || p.y > h) p.vy *= -1;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+    for (let j = i+1; j < pts.length; j++) {
+      const p2 = pts[j];
+      const d = Math.hypot(p.x - p2.x, p.y - p2.y);
+      if (d < 100) {
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = 'rgba(255,255,255,' + (1 - d/100)*0.12 + ')';
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawConstellation);
+}
+drawConstellation();
+
+// Init
+focusHome(0);
+</script>
+</body>
+</html>
