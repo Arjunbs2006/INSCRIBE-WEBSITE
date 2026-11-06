@@ -1,0 +1,157 @@
+:root {
+  --bg: #0f0f10;
+  --surface: #171718;
+  --surface-2: #1f1f21;
+  --text: #f6f6f7;
+  --muted: #b8b8bd;
+  --border: #2e2e33;
+  --accent: #ff7a1a;
+  --accent-strong: #ff8f3f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+main,
+header,
+footer {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.hero {
+  padding-top: 5rem;
+  padding-bottom: 4rem;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+h1 {
+  margin: 0.8rem 0 1rem;
+  font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.lead {
+  margin: 0 auto;
+  max-width: 700px;
+  color: var(--muted);
+}
+
+.actions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.button {
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.72rem 1.2rem;
+  font-weight: 600;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.primary {
+  background: var(--accent);
+  color: #161616;
+}
+
+.primary:hover {
+  background: var(--accent-strong);
+}
+
+.secondary {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.section {
+  padding-top: 1.8rem;
+  padding-bottom: 1.8rem;
+}
+
+.section + .section {
+  border-top: 1px solid var(--border);
+}
+
+h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.4rem;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.grid .cards {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.card h3 {
+  margin: 0 0 0.4rem;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.department-list {
+  margin: 0.9rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.5rem;
+  color: var(--text);
+}
+
+.notice {
+  margin-top: 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-2);
+  border-radius: 0.65rem;
+  padding: 0.8rem 0.95rem;
+  color: var(--muted);
+}
+
+.footer {
+  border-top: 1px solid var(--border);
+  margin-top: 1rem;
+  padding-bottom: 4rem;
+}
+
+@media (max-width: 700px) {
+  .hero {
+    padding-top: 3.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .section {
+    padding-top: 1.4rem;
+    padding-bottom: 1.4rem;
+  }
+}
