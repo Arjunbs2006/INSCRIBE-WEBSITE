@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { sound } from '../utils/audio';
+import CyberMenuWave from './CyberMenuWave';
 
 export function SectionIcon({ name }) {
   switch (name) {
@@ -72,6 +73,10 @@ export default function HomeDock({
   onHoverSection,
   onSelectSection,
 }) {
+  const dockRef = useRef(null);
+  const [isInteracting, setIsInteracting] = useState(false);
+  const activeSection = sections[activeIndex] || sections[0];
+
   return (
     <section className="view-home" aria-label="Home Navigation">
       <div className="home-content">
@@ -82,45 +87,65 @@ export default function HomeDock({
           {tagline}
         </div>
 
-        <nav className="dock" aria-label="Club sections">
-          {sections.map((sec, idx) => {
-            const isSelected = idx === activeIndex;
-            return (
-              <button
-                key={sec.id}
-                type="button"
-                className={`dock-btn ${isSelected ? 'on' : ''}`}
-                aria-label={sec.label}
-                onPointerEnter={(e) => {
-                  if (e.pointerType === 'mouse') {
+        {/* Dock Bar Container with Cybernetic Hand & Code Wave */}
+        <div
+          className="dock-wrapper"
+          onMouseEnter={() => setIsInteracting(true)}
+          onMouseLeave={() => setIsInteracting(false)}
+          onTouchStart={() => setIsInteracting(true)}
+        >
+          {/* Cyber Menu Wave & Holographic Hand Animation */}
+          <CyberMenuWave
+            dockRef={dockRef}
+            activeIndex={activeIndex}
+            isInteracting={isInteracting}
+            themeColor={activeSection.color}
+          />
+
+          <nav className="dock" ref={dockRef} aria-label="Club sections">
+            {sections.map((sec, idx) => {
+              const isSelected = idx === activeIndex;
+              return (
+                <button
+                  key={sec.id}
+                  type="button"
+                  className={`dock-btn ${isSelected ? 'on' : ''}`}
+                  aria-label={sec.label}
+                  onPointerEnter={(e) => {
+                    setIsInteracting(true);
+                    if (e.pointerType === 'mouse') {
+                      sound.playCyberWave();
+                      sound.playTick(500 + idx * 60);
+                      onHoverSection(idx);
+                    }
+                  }}
+                  onFocus={() => {
+                    setIsInteracting(true);
+                    sound.playCyberWave();
                     sound.playTick(500 + idx * 60);
                     onHoverSection(idx);
-                  }
-                }}
-                onFocus={() => {
-                  sound.playTick(500 + idx * 60);
-                  onHoverSection(idx);
-                }}
-                onClick={() => {
-                  sound.playOpen();
-                  onSelectSection(idx);
-                }}
-              >
-                <div className="dock-icon-wrapper">
-                  <SectionIcon name={sec.icon} />
-                  <span className="dock-number">0{idx + 1}</span>
-                </div>
-                <span className="dock-nm">{sec.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+                  }}
+                  onClick={() => {
+                    sound.playOpen();
+                    onSelectSection(idx);
+                  }}
+                >
+                  <div className="dock-icon-wrapper">
+                    <SectionIcon name={sec.icon} />
+                    <span className="dock-number">0{idx + 1}</span>
+                  </div>
+                  <span className="dock-nm">{sec.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
         <div className="hint-bar">
           <div className="hint-item">
             <kbd className="kbd">←</kbd>
             <kbd className="kbd">→</kbd>
-            <span>Browse dock</span>
+            <span>Touch or browse dock</span>
           </div>
           <div className="hint-divider" />
           <div className="hint-item">

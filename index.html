@@ -139,7 +139,62 @@
       font: 600 clamp(22px, 3.6vw, 44px)/1.15 var(--display); letter-spacing: -0.02em;
       max-width: 26ch; min-height: 2.2em; display: flex; align-items: flex-end; color: #fff;
     }
-    .dock { display: flex; gap: clamp(10px, 2vw, 24px); margin-top: clamp(12px, 2.5vh, 26px); align-items: flex-start; flex-wrap: wrap; width: 100%; }
+    .dock-wrapper {
+      position: relative;
+      width: 100%;
+      margin-top: clamp(12px, 2.5vh, 26px);
+      padding-bottom: 8px;
+    }
+    .cyber-menu-wave-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 5;
+    }
+    .cyber-wave-canvas {
+      position: absolute;
+      left: 0;
+      bottom: -6px;
+      width: 100%;
+      height: 90px;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    .cyber-hand-wrapper {
+      position: absolute;
+      bottom: 12px;
+      left: 0;
+      width: 70px;
+      height: 120px;
+      margin-left: -35px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      transform: translate3d(0, 50px, 0) scale(0.85);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      filter: drop-shadow(0 0 16px var(--hand-color, #38bdf8));
+    }
+    .cyber-hand-wrapper.active {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    .cyber-hand-wrapper.tapping {
+      transform: translate3d(0, -18px, 0) scale(1.08) !important;
+      transition: transform 0.12s ease-out;
+    }
+    .cyber-hand-svg { width: 100%; height: 100%; overflow: visible; }
+    .plasma-beam { animation: plasmaFlicker 0.14s infinite alternate ease-in-out; }
+    @keyframes plasmaFlicker { from { opacity: 0.6; stroke-width: 1.8; } to { opacity: 1; stroke-width: 3.2; } }
+    .contact-spark { animation: sparkPulse 0.3s infinite alternate ease-in-out; }
+    @keyframes sparkPulse { from { r: 2.5; opacity: 0.7; } to { r: 5.5; opacity: 1; } }
+    .hand-aura-text {
+      position: absolute; bottom: 0px; left: 50%; transform: translateX(-50%);
+      font-family: var(--mono); font-size: 8px; font-weight: 700; color: var(--hand-color, #38bdf8);
+      letter-spacing: 0.12em; white-space: nowrap; opacity: 0.85; text-shadow: 0 0 8px currentColor;
+    }
+    .dock { position: relative; z-index: 8; display: flex; gap: clamp(10px, 2vw, 24px); align-items: flex-start; flex-wrap: wrap; width: 100%; }
     .dock-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; width: clamp(58px, 7vw, 84px); opacity: 0.6; transition: opacity 0.3s, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
     .dock-icon-wrapper {
       position: relative; width: 100%; aspect-ratio: 1; border-radius: 24%;
@@ -305,7 +360,51 @@
     <section class="view on" id="home">
       <div class="club-kicker"><span class="dot"></span> Student Engineering & Builder Collective</div>
       <div class="tagline rise" id="tagline"></div>
-      <nav class="dock" id="dock"></nav>
+      
+      <div class="dock-wrapper" id="dockWrapper">
+        <div class="cyber-menu-wave-layer" aria-hidden="true">
+          <canvas id="cyberWaveCanvas" class="cyber-wave-canvas"></canvas>
+          <div class="cyber-hand-wrapper" id="cyberHand">
+            <svg class="cyber-hand-svg" viewBox="0 0 70 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="handGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+                <radialGradient id="plasmaNode" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="60%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="transparent" />
+                </radialGradient>
+              </defs>
+              <path d="M24 120 L27 88 L43 88 L46 120 Z" fill="currentColor" opacity="0.35"/>
+              <line x1="28" y1="92" x2="28" y2="118" stroke="#38bdf8" stroke-width="1.2" opacity="0.8"/>
+              <line x1="35" y1="88" x2="35" y2="118" stroke="#ffffff" stroke-width="1.4" opacity="0.9"/>
+              <line x1="42" y1="92" x2="42" y2="118" stroke="#38bdf8" stroke-width="1.2" opacity="0.8"/>
+              <polygon points="22,86 48,86 52,62 18,62" fill="currentColor" opacity="0.3" stroke="#38bdf8" stroke-width="1.2"/>
+              <circle cx="35" cy="74" r="5" fill="#38bdf8" opacity="0.7"/>
+              <circle cx="35" cy="74" r="2.5" fill="#ffffff"/>
+              <path d="M22 62 L26 48" stroke="#38bdf8" stroke-width="1.5"/>
+              <path d="M30 62 L32 40" stroke="#38bdf8" stroke-width="1.5"/>
+              <path d="M35 62 L35 22" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M41 62 L40 42" stroke="#38bdf8" stroke-width="1.5"/>
+              <path d="M48 62 L46 48" stroke="#38bdf8" stroke-width="1.5"/>
+              <rect x="22" y="42" width="6" height="8" rx="2" fill="currentColor" opacity="0.6"/>
+              <rect x="29" y="34" width="6" height="8" rx="2" fill="currentColor" opacity="0.6"/>
+              <rect x="38" y="36" width="6" height="8" rx="2" fill="currentColor" opacity="0.6"/>
+              <rect x="44" y="42" width="5" height="7" rx="2" fill="currentColor" opacity="0.6"/>
+              <rect x="32.5" y="18" width="5" height="18" rx="2.5" fill="currentColor" opacity="0.9" stroke="#ffffff" stroke-width="1"/>
+              <circle cx="35" cy="22" r="2" fill="#ffffff"/>
+              <circle cx="35" cy="12" r="3" fill="#ffffff" filter="url(#handGlow)"/>
+              <line x1="35" y1="10" x2="35" y2="0" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" class="plasma-beam"/>
+              <circle cx="35" cy="0" r="5" fill="url(#plasmaNode)" class="contact-spark"/>
+            </svg>
+            <div class="hand-aura-text">&lt;touch /&gt;</div>
+          </div>
+        </div>
+        <nav class="dock" id="dock"></nav>
+      </div>
+
       <div class="hint-bar">
         <div class="hint-item"><kbd class="kbd">←</kbd><kbd class="kbd">→</kbd><span>Browse sections</span></div>
         <div class="hint-divider"></div>
@@ -375,6 +474,48 @@ function playSound(freq = 600, duration = 0.04) {
     gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
     osc.connect(gain); gain.connect(audioCtx.destination);
     osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playCyberWave() {
+  if (!soundEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(240, now);
+    osc.frequency.exponentialRampToValueAtTime(780, now + 0.12);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.linearRampToValueAtTime(2400, now + 0.12);
+    gain.gain.setValueAtTime(0.03, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.15);
+  } catch(e) {}
+}
+
+function playCyberBurst() {
+  if (!soundEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    [900, 1200, 1600, 2200].forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.03);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.4, now + idx * 0.03 + 0.15);
+      gain.gain.setValueAtTime(0.04, now + idx * 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.03 + 0.2);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now + idx * 0.03); osc.stop(now + idx * 0.03 + 0.2);
+    });
   } catch(e) {}
 }
 
@@ -465,12 +606,169 @@ updateClock(); setInterval(updateClock, 10000);
 
 // Dock init
 const dock = document.getElementById('dock');
+const dockWrapper = document.getElementById('dockWrapper');
+const cyberHand = document.getElementById('cyberHand');
+const cyberWaveCanvas = document.getElementById('cyberWaveCanvas');
+const waveCtx = cyberWaveCanvas.getContext('2d');
+const CODE_SYMBOLS = ['0', '1', '</>', '{ }', '=>', 'fn()', '0x', 'const', 'λ', '⚡', 'git', '&&', '||', '!=', '::', '/**/'];
+
+let handTargetX = 0;
+let handCurrentX = 0;
+let isHandActive = false;
+let waveTime = 0;
+let waveRipples = [];
+
+function resizeWaveCanvas() {
+  if (!dockWrapper) return;
+  const rect = dockWrapper.getBoundingClientRect();
+  cyberWaveCanvas.width = rect.width;
+  cyberWaveCanvas.height = rect.height + 60;
+}
+resizeWaveCanvas();
+window.addEventListener('resize', resizeWaveCanvas);
+
+const waveParticles = Array.from({ length: 26 }, (_, i) => ({
+  x: Math.random() * (cyberWaveCanvas.width || 600),
+  speed: 0.8 + Math.random() * 1.3,
+  symbol: CODE_SYMBOLS[Math.floor(Math.random() * CODE_SYMBOLS.length)],
+  size: 9 + Math.random() * 5,
+  alpha: 0.35 + Math.random() * 0.45,
+  offset: Math.random() * Math.PI * 2,
+}));
+
+function renderWave() {
+  waveTime += 0.04;
+  const w = cyberWaveCanvas.width;
+  const h = cyberWaveCanvas.height;
+  waveCtx.clearRect(0, 0, w, h);
+
+  handCurrentX += (handTargetX - handCurrentX) * 0.16;
+
+  // Wave line
+  const baselineY = h - 28;
+  waveCtx.beginPath();
+  waveCtx.moveTo(0, baselineY);
+
+  for (let x = 0; x <= w; x += 6) {
+    let waveY = Math.sin(x * 0.015 + waveTime * 2) * 5 + Math.sin(x * 0.035 - waveTime * 1.5) * 3;
+    if (isHandActive && handCurrentX > 0) {
+      const dist = Math.abs(x - handCurrentX);
+      if (dist < 90) {
+        waveY -= Math.cos((dist / 90) * (Math.PI / 2)) * 24;
+      }
+    }
+    waveCtx.lineTo(x, baselineY + waveY);
+  }
+
+  const curColor = SECTIONS[state.home]?.color || '#3b82f6';
+  waveCtx.strokeStyle = curColor;
+  waveCtx.lineWidth = 1.8;
+  waveCtx.shadowColor = curColor;
+  waveCtx.shadowBlur = 12;
+  waveCtx.stroke();
+  waveCtx.shadowBlur = 0;
+
+  // Code particles
+  waveParticles.forEach(p => {
+    p.x = (p.x + p.speed) % w;
+    let pY = baselineY + Math.sin(p.x * 0.02 + waveTime + p.offset) * 6;
+    if (isHandActive && Math.abs(p.x - handCurrentX) < 70) {
+      pY -= (1 - Math.abs(p.x - handCurrentX) / 70) * 20;
+      waveCtx.fillStyle = '#fff';
+      waveCtx.font = `600 ${p.size + 2}px "JetBrains Mono", monospace`;
+    } else {
+      waveCtx.fillStyle = 'rgba(255,255,255,0.4)';
+      waveCtx.font = `400 ${p.size}px "JetBrains Mono", monospace`;
+    }
+    waveCtx.fillText(p.symbol, p.x, pY);
+  });
+
+  // Outward shockwaves
+  for (let i = waveRipples.length - 1; i >= 0; i--) {
+    const rip = waveRipples[i];
+    rip.radius += rip.speed;
+    rip.alpha -= 0.022;
+    if (rip.alpha <= 0) {
+      waveRipples.splice(i, 1);
+      continue;
+    }
+    waveCtx.beginPath();
+    waveCtx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
+    waveCtx.strokeStyle = `rgba(255, 255, 255, ${rip.alpha * 0.7})`;
+    waveCtx.lineWidth = Math.max(1, (1 - rip.radius / 120) * 3);
+    waveCtx.shadowColor = curColor;
+    waveCtx.shadowBlur = 16;
+    waveCtx.stroke();
+    waveCtx.shadowBlur = 0;
+
+    rip.particles.forEach(pt => {
+      pt.x += pt.vx;
+      pt.y += pt.vy;
+      waveCtx.fillStyle = `rgba(255, 255, 255, ${rip.alpha})`;
+      waveCtx.font = '700 11px "JetBrains Mono", monospace';
+      waveCtx.fillText(pt.sym, pt.x, pt.y);
+    });
+  }
+
+  requestAnimationFrame(renderWave);
+}
+renderWave();
+
+function triggerTouchBurst(targetX, targetY) {
+  playCyberBurst();
+  cyberHand.classList.add('tapping');
+  setTimeout(() => cyberHand.classList.remove('tapping'), 300);
+
+  waveRipples.push({
+    x: targetX,
+    y: targetY,
+    radius: 10,
+    speed: 4.8,
+    alpha: 1,
+    particles: Array.from({ length: 8 }, (_, idx) => {
+      const angle = (idx / 8) * Math.PI * 2 + Math.random() * 0.4;
+      const velocity = 2.5 + Math.random() * 3.5;
+      return {
+        x: targetX,
+        y: targetY,
+        vx: Math.cos(angle) * velocity,
+        vy: Math.sin(angle) * velocity,
+        sym: CODE_SYMBOLS[idx % CODE_SYMBOLS.length],
+      };
+    }),
+  });
+}
+
+dockWrapper.addEventListener('mouseenter', () => { isHandActive = true; cyberHand.classList.add('active'); });
+dockWrapper.addEventListener('mouseleave', () => { isHandActive = false; cyberHand.classList.remove('active'); });
+dockWrapper.addEventListener('touchstart', () => { isHandActive = true; cyberHand.classList.add('active'); }, { passive: true });
+
 SECTIONS.forEach((s, idx) => {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'dock-btn';
   b.innerHTML = '<div class="dock-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' + s.icon + '</svg><span class="dock-number">0' + (idx+1) + '</span></div><span class="dock-nm">' + s.label + '</span>';
-  b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { playSound(500 + idx*50); focusHome(idx); } });
-  b.addEventListener('click', () => { playSound(800); focusHome(idx); openSection(idx); });
+  
+  b.addEventListener('pointerenter', e => {
+    isHandActive = true;
+    cyberHand.classList.add('active');
+    if (e.pointerType === 'mouse') {
+      playCyberWave();
+      playSound(500 + idx*50);
+      focusHome(idx);
+    }
+  });
+
+  b.addEventListener('click', (e) => {
+    const wrapRect = dockWrapper.getBoundingClientRect();
+    const btnRect = b.getBoundingClientRect();
+    const touchX = btnRect.left - wrapRect.left + btnRect.width / 2;
+    const touchY = btnRect.top - wrapRect.top + btnRect.height / 2;
+    triggerTouchBurst(touchX, touchY);
+    playSound(800);
+    focusHome(idx);
+    openSection(idx);
+  });
+
   dock.appendChild(b);
 });
 
@@ -479,6 +777,17 @@ function focusHome(idx) {
   [...dock.children].forEach((b, k) => b.classList.toggle('on', k === idx));
   const s = SECTIONS[idx];
   setTheme(s.color);
+  cyberHand.style.setProperty('--hand-color', s.color);
+
+  // Position cyber hand directly under the active button
+  const btn = dock.children[idx];
+  if (btn && dockWrapper) {
+    const wrapRect = dockWrapper.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    handTargetX = btnRect.left - wrapRect.left + btnRect.width / 2;
+    cyberHand.style.transform = `translate3d(${handTargetX}px, 0, 0)`;
+  }
+
   swapText(document.getElementById('ghost'), s.label);
   swapText(document.getElementById('tagline'), s.taglines[state.tag[idx]++ % s.taglines.length]);
 }
